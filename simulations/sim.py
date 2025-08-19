@@ -2,7 +2,7 @@ import pygame
 import math
 
 led_size = 32
-light_white = (170, 170, 170)
+light_white = (140, 140, 140)
 red = (255, 0, 0)
 H = 32
 W = 24
@@ -12,24 +12,46 @@ buffer = [0] * (W * H)
 
 # we have text of size 4x4 so it can just be a single 16 bit number
 # read last four bits, right shift by 4
-nums = [
-        0b11111_10001_10001_11111, 
-        0b01001_11111_11111_00001, 
-        0b10111_10101_10101_11101, 
-        0b10001_10101_10101_11111, 
-        0b11100_00100_00100_11111, 
-        0b11101_10101_10101_10111, 
-        0b11111_10101_10101_10111, 
-        0b10000_10000_10000_11111, 
-        0b11111_10101_10101_11111, 
-        0b11100_10100_10100_11111, 
+chars = [
+        0b11111_10001_10001_11111, # 0
+        0b01001_11111_11111_00001, # 1
+        0b10111_10101_10101_11101, # 2
+        0b10001_10101_10101_11111, # 3
+        0b11100_00100_00100_11111, # 4
+        0b11101_10101_10101_10111, # 5
+        0b11111_10101_10101_10111, # 6
+        0b10000_10000_10000_11111, # 7
+        0b11111_10101_10101_11111, # 8
+        0b11100_10100_10100_11111, # 9 
+        # LETTERS
+        0b11111_10100_10100_11111, # A 10th index
+        0b11111_10101_10101_01110, 
+        0b11111_10001_10001_10001, 
+        0b11111_10001_10001_01110, 
+        0b11111_10101_10101_10001, 
+        0b11111_10100_10100_10000, 
+        0b11111_10001_10101_10111, 
+        0b11111_00100_00100_11111, 
+        0b10001_11111_11111_00001, 
+        0b10011_10001_11111_10000, 
+        0b11111_00100_01010_10001, 
+        0b11111_00001_00001_00001, 
+        0b11111_01100_01100_11111, 
+        0b11111_01000_00100_11111, 
+        0b01110_10001_10001_01110, 
+        0b11111_10010_10010_01100, 
+        0b01110_10001_10011_01111, 
+        0b11111_10100_10110_01101, 
+        0b11001_10101_10101_10011, 
+        0b10000_11111_11111_10000, 
+        0b11111_00001_00001_11111, 
+        0b11110_00001_00001_11110, 
+        0b11111_00010_00010_11111, 
+        0b10011_01100_01110_10001, 
+        0b11101_00101_00101_11111, 
+        0b10011_10101_11001_10001, 
 ]
 
-name_letters = [
-        0b11111_10100_10100_11111, 
-        0b11111_00001_00001_00001, 
-        0b10001_11111_11111_10001, 
-]
 def printb(x):
     print("{:08b}".format(x))
 
@@ -41,18 +63,19 @@ def clear_buffer():
         buffer[i] = 0
 
 def draw_letter(x, y, letter):
-    # if not validate(x, y) or not validate(x + 5, y + 5):
-        # return
-
-    num = name_letters[letter] 
+    num = chars[letter] 
     for c in range(5):
         for r in range(5):
             if num & (1 << (19 - r)):
-                cx = c + x
-                cy = r + y
-                if validate(cx, cy):
-                    buffer[W * (r + (y % H)) + (c + (x % W))] = 1
+                cx = (c + x) % W
+                cy = (r + y) % H
+                buffer[W * cy + cx] = 1
         num = num << 5
+
+def draw_text(x, y, text):
+    for i in text:
+        draw_letter(x, y, ord(i) - 55)
+        x += 5
 
 
 def draw_rect(x, y, w, h):
@@ -120,8 +143,8 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
-    current_num = 0
-    delay = 10
+    current_num = 65
+    delay = 200
     last_update = pygame.time.get_ticks()
     x = 10
     y = 10
@@ -140,13 +163,10 @@ def main():
         now = pygame.time.get_ticks()
         if now - last_update >= delay:
             clear_buffer()
-            draw_letter(x, 20, 0)
-            draw_letter(x + 6, 20, 1)
-            draw_letter(x + 12, 20, 2)
-            x += 1
-            if x > W:
-                x = -5
-            current_num = (current_num + 1) % 10
+            draw_text(3, 12, 'PLAY')
+            current_num += 1
+            if (current_num - 65 + 10) >= len(chars):
+                current_num = 65
             last_update = now 
 
         # flip() the display to put your work on screen
