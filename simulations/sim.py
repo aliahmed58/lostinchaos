@@ -10,15 +10,16 @@ radius = led_size // 2 - 2
 
 buffer = [0] * (W * H)
 
-# column major order
-letters = {
-    'a': [
-        0b1111,
-        0b1010,
-        0b1010,
-        0b1111
-    ]
-}
+# we have text of size 4x4 so it can just be a single 16 bit number
+# read last four bits, right shift by 4
+nums = [
+    0b11110_10001_10001_11111,  # 0     
+    0b01001_11111_11111_00011,  # 1
+    0b11111_10001_10101_01110,  # 2
+    0b11111_10001_10101_01110,  # 3 
+    0b11110_00100_00100_11111,  # 4
+    0b10001_10111_10111_11110,  # 5
+]
 
 def printb(x):
     print("{:08b}".format(x))
@@ -26,16 +27,20 @@ def printb(x):
 def validate(x, y):
     return x < W and x >= 0 and y < H and y >= 0
 
+def clear_buffer():
+    for i in range(W * H):
+        buffer[i] = 0
+
 def draw_letter(x, y, letter):
-    if not validate(x, y) or not validate(x + 4, y + 4):
+    if not validate(x, y) or not validate(x + 5, y + 5):
         return
 
-    l_arr = letters[letter] 
-    for c in range(4):
-        rd = l_arr[c]
-        for r in range(4):
-            if rd & (0b1000 >> r):
+    num = nums[letter] 
+    for c in range(5):
+        for r in range(5):
+            if num & (1 << (19 - r)):
                 buffer[W * (r + y) + (c + x)] = 1
+        num = num << 5
 
 
 def draw_rect(x, y, w, h):
@@ -103,6 +108,9 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
+    current_num = 0
+    delay = 1000
+    last_update = pygame.time.get_ticks()
 
     while running:
         # poll for events
@@ -115,8 +123,12 @@ def main():
         screen.fill("black")
         draw_grid_lines(screen)
         render(screen)
-        draw_letter(10, 7, 'a')
-        # RENDER YOUR GAME HERE
+        now = pygame.time.get_ticks()
+        if now - last_update >= delay:
+            clear_buffer()
+            draw_letter(10, 10, current_num)
+            current_num = (current_num + 1) % 6
+            last_update = now 
 
         # flip() the display to put your work on screen
         pygame.display.flip()
