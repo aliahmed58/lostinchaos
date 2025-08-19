@@ -13,14 +13,23 @@ buffer = [0] * (W * H)
 # we have text of size 4x4 so it can just be a single 16 bit number
 # read last four bits, right shift by 4
 nums = [
-    0b11110_10001_10001_11111,  # 0     
-    0b01001_11111_11111_00011,  # 1
-    0b11111_10001_10101_01110,  # 2
-    0b11111_10001_10101_01110,  # 3 
-    0b11110_00100_00100_11111,  # 4
-    0b10001_10111_10111_11110,  # 5
+        0b11111_10001_10001_11111, 
+        0b01001_11111_11111_00001, 
+        0b10111_10101_10101_11101, 
+        0b10001_10101_10101_11111, 
+        0b11100_00100_00100_11111, 
+        0b11101_10101_10101_10111, 
+        0b11111_10101_10101_10111, 
+        0b10000_10000_10000_11111, 
+        0b11111_10101_10101_11111, 
+        0b11100_10100_10100_11111, 
 ]
 
+name_letters = [
+        0b11111_10100_10100_11111, 
+        0b11111_00001_00001_00001, 
+        0b10001_11111_11111_10001, 
+]
 def printb(x):
     print("{:08b}".format(x))
 
@@ -32,14 +41,17 @@ def clear_buffer():
         buffer[i] = 0
 
 def draw_letter(x, y, letter):
-    if not validate(x, y) or not validate(x + 5, y + 5):
-        return
+    # if not validate(x, y) or not validate(x + 5, y + 5):
+        # return
 
-    num = nums[letter] 
+    num = name_letters[letter] 
     for c in range(5):
         for r in range(5):
             if num & (1 << (19 - r)):
-                buffer[W * (r + y) + (c + x)] = 1
+                cx = c + x
+                cy = r + y
+                if validate(cx, cy):
+                    buffer[W * (r + (y % H)) + (c + (x % W))] = 1
         num = num << 5
 
 
@@ -109,8 +121,10 @@ def main():
     running = True
 
     current_num = 0
-    delay = 1000
+    delay = 10
     last_update = pygame.time.get_ticks()
+    x = 10
+    y = 10
 
     while running:
         # poll for events
@@ -126,14 +140,19 @@ def main():
         now = pygame.time.get_ticks()
         if now - last_update >= delay:
             clear_buffer()
-            draw_letter(10, 10, current_num)
-            current_num = (current_num + 1) % 6
+            draw_letter(x, 20, 0)
+            draw_letter(x + 6, 20, 1)
+            draw_letter(x + 12, 20, 2)
+            x += 1
+            if x > W:
+                x = -5
+            current_num = (current_num + 1) % 10
             last_update = now 
 
         # flip() the display to put your work on screen
         pygame.display.flip()
 
-        clock.tick(20)  # limits FPS to 60
+        clock.tick(10)  # limits FPS to 60
 
     pygame.quit()
     
