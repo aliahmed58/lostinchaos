@@ -164,6 +164,7 @@ def main():
         if now - last_update >= delay:
             clear_buffer()
             draw_text(3, 12, 'PLAY')
+            draw_rect(3, 18, 19, 1)
             current_num += 1
             if (current_num - 65 + 10) >= len(chars):
                 current_num = 65
